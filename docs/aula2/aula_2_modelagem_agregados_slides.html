@@ -129,6 +129,23 @@
         box-shadow: 0 34px 80px var(--shadow);
       }
 
+      .slide.exercise .frame {
+        border-color: #d69a28;
+        background: linear-gradient(135deg, rgba(255, 248, 214, .98), rgba(255, 236, 174, .98));
+        box-shadow: 0 34px 80px rgba(143, 91, 10, .24);
+      }
+
+      .slide.exercise .rail {
+        border-right-color: #d69a28;
+        background: linear-gradient(180deg, #d97706, #b45309);
+      }
+
+      .slide.exercise .rail::after,
+      .slide.exercise .slide-count { color: rgba(255, 255, 255, .72); }
+      .slide.exercise .mark { color: #92400e; background: #fff7d6; }
+      .slide.exercise .panelbar { background: rgba(255, 226, 138, .62); }
+      .slide.exercise .tag { color: #9a4d08; }
+
       .rail {
         position: relative;
         padding: 24px 10px;
@@ -491,7 +508,7 @@ produtos</div></div><div><pre class="code">{
     ├── cidade
     └── estado</div></div><div class="pager"><a href="#slide-05">Anterior</a><span>06 / 32</span><a href="#slide-07">Próximo</a></div></div></article></section>
 
-      <section class="slide" id="slide-07"><article class="frame"><aside class="rail"><div class="mark">07</div><div class="slide-count">07 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / objeto interno</span><span class="tag">prática</span></div><div class="content"><h2 class="title-lg">Como você modelaria?</h2><div class="grid-2"><div class="diagram">Pessoa
+      <section class="slide exercise" id="slide-07"><article class="frame"><aside class="rail"><div class="mark">07</div><div class="slide-count">07 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / objeto interno</span><span class="tag">prática</span></div><div class="content"><h2 class="title-lg">Como você modelaria?</h2><div class="grid-2"><div class="diagram">Pessoa
 
 nome
 email
@@ -548,7 +565,7 @@ objetos
    ↓
 campos</div></div></div><div class="pager"><a href="#slide-10">Anterior</a><span>11 / 32</span><a href="#slide-12">Próximo</a></div></div></article></section>
 
-      <section class="slide" id="slide-12"><article class="frame"><aside class="rail"><div class="mark">12</div><div class="slide-count">12 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / filme</span><span class="tag">prática</span></div><div class="content"><h2 class="title-lg">Modele um filme</h2><div class="grid-2"><div class="diagram">Filme
+      <section class="slide exercise" id="slide-12"><article class="frame"><aside class="rail"><div class="mark">12</div><div class="slide-count">12 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / filme</span><span class="tag">prática</span></div><div class="content"><h2 class="title-lg">Modele um filme</h2><div class="grid-2"><div class="diagram">Filme
 
 titulo
 ano
@@ -693,7 +710,7 @@ generos</div><div class="question">Represente o filme utilizando JSON.</div></di
 
       <section class="slide" id="slide-23"><article class="frame"><aside class="rail"><div class="mark">23</div><div class="slide-count">23 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">decisão / regra mental</span><span class="tag">tendências</span></div><div class="content top"><h2 class="title-lg">Como decidir?</h2><table class="table"><thead><tr><th>Situação</th><th>Tendência</th></tr></thead><tbody><tr><td>Dados normalmente usados juntos</td><td>Incorporar</td></tr><tr><td>O dado só faz sentido dentro do pai</td><td>Incorporar</td></tr><tr><td>Lista pequena e limitada</td><td>Incorporar</td></tr><tr><td>Dado possui vida própria</td><td>Referenciar</td></tr><tr><td>É consultado sozinho frequentemente</td><td>Referenciar</td></tr><tr><td>Pode crescer indefinidamente</td><td>Avaliar referência</td></tr><tr><td>É compartilhado por muitas entidades</td><td>Avaliar referência</td></tr></tbody></table><p class="lead">Isso não é uma receita matemática.</p></div><div class="pager"><a href="#slide-22">Anterior</a><span>23 / 32</span><a href="#slide-24">Próximo</a></div></div></article></section>
 
-      <section class="slide" id="slide-24"><article class="frame"><aside class="rail"><div class="mark">24</div><div class="slide-count">24 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / decisão</span><span class="tag">prática</span></div><div class="content"><h2 class="title-lg">Incorporar ou referenciar?</h2><div class="grid-3"><div class="card green"><h3>Endereço de entrega</h3><p>Endereço utilizado na entrega de um pedido.</p></div><div class="card blue"><h3>Produto</h3><p>Cadastro completo do produto.</p></div><div class="card clay"><h3>Preço pago</h3><p>Valor pago pelo item no pedido.</p></div></div><div class="question">Escolha uma tendência e justifique.</div></div><div class="pager"><a href="#slide-23">Anterior</a><span>24 / 32</span><a href="#slide-25">Próximo</a></div></div></article></section>
+      <section class="slide exercise" id="slide-24"><article class="frame"><aside class="rail"><div class="mark">24</div><div class="slide-count">24 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / decisão</span><span class="tag">prática</span></div><div class="content"><h2 class="title-lg">Incorporar ou referenciar?</h2><div class="grid-3"><div class="card green"><h3>Endereço de entrega</h3><p>Endereço utilizado na entrega de um pedido.</p></div><div class="card blue"><h3>Produto</h3><p>Cadastro completo do produto.</p></div><div class="card clay"><h3>Preço pago</h3><p>Valor pago pelo item no pedido.</p></div></div><div class="question">Escolha uma tendência e justifique.</div></div><div class="pager"><a href="#slide-23">Anterior</a><span>24 / 32</span><a href="#slide-25">Próximo</a></div></div></article></section>
 
       <section class="slide" id="slide-25"><article class="frame"><aside class="rail"><div class="mark">25</div><div class="slide-count">25 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / discussão</span><span class="tag">decisão</span></div><div class="content top"><h2 class="title-lg">Uma possível decisão</h2><table class="table"><thead><tr><th>Situação</th><th>Tendência</th><th>Motivo</th></tr></thead><tbody><tr><td>Endereço de entrega</td><td>Incorporar</td><td>Representa o endereço usado naquele pedido.</td></tr><tr><td>Cadastro completo do produto</td><td>Referenciar</td><td>Produto possui vida própria.</td></tr><tr><td>Preço pago</td><td>Incorporar</td><td>Representa o valor negociado naquele momento.</td></tr></tbody></table><div class="callout">Mais importante do que decorar a resposta é conseguir justificar a decisão.</div></div><div class="pager"><a href="#slide-24">Anterior</a><span>25 / 32</span><a href="#slide-26">Próximo</a></div></div></article></section>
 
@@ -722,7 +739,7 @@ R$ 80</div><pre class="code">{
   }
 }</pre></div><div class="grid-2"><div class="card green"><h3>Normalização</h3><p>Menos repetição.</p></div><div class="card clay"><h3>Desnormalização</h3><p>Dados mais próximos de onde são utilizados.</p></div></div></div><div class="pager"><a href="#slide-26">Anterior</a><span>27 / 32</span><a href="#slide-28">Próximo</a></div></div></article></section>
 
-      <section class="slide" id="slide-28"><article class="frame"><aside class="rail"><div class="mark">28</div><div class="slide-count">28 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício final / biblioteca</span><span class="tag">prática</span></div><div class="content"><h2 class="title-lg">Biblioteca</h2><div class="grid-2"><div class="diagram">Empréstimo
+      <section class="slide exercise" id="slide-28"><article class="frame"><aside class="rail"><div class="mark">28</div><div class="slide-count">28 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício final / biblioteca</span><span class="tag">prática</span></div><div class="content"><h2 class="title-lg">Biblioteca</h2><div class="grid-2"><div class="diagram">Empréstimo
 
 dataEmprestimo
 dataPrevista

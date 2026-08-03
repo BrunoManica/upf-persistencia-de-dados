@@ -7,7 +7,7 @@
 
 Ao final desta aula, você deve conseguir identificar um agregado, representar dados relacionados com objetos e arrays JSON e justificar uma decisão simples entre incorporar ou referenciar dados.
 
-!!! note "Escopo da aula"
+## Escopo da aula
 
     Nesta aula, o foco é a modelagem. Os comandos do MongoDB e a persistência dos documentos serão estudados na aula seguinte.
 
@@ -290,7 +290,7 @@ O mesmo ocorre com itens:
 
 O MongoDB chama essa estratégia de *embedded data*: dado dentro do documento. Ela costuma ser interessante quando os dados relacionados são recuperados juntos.
 
-!!! warning "Incorporar não é colocar tudo dentro de tudo"
+**Incorporar não é colocar tudo dentro de tudo**
 
     O fato de um documento poder conter outros documentos não significa que todo o cadastro de um cliente deve ficar dentro de cada pedido.
 
@@ -360,23 +360,9 @@ Isso é uma **referência**. Ela permite relacionar documentos separados usando 
 | Pode crescer indefinidamente | Avaliar referência |
 | Muitas entidades compartilham o mesmo dado | Avaliar referência |
 
-!!! important "Não é uma receita matemática"
+**Não é uma receita matemática**
 
     Avalie o relacionamento e, principalmente, como a aplicação consulta e altera os dados.
-
-
-
-## 10. Discussão final
-
-Para cada situação, escolha uma tendência e justifique-a:
-
-| Situação | Tendência inicial | Justificativa |
-|---|---|---|
-| Endereço de entrega do pedido | Incorporar | Representa o endereço usado naquele pedido. |
-| Cadastro completo do produto | Referenciar | O produto possui vida própria fora do pedido. |
-| Preço pago | Incorporar | Representa o estado da negociação naquele momento. |
-
-Um produto pode existir em um documento separado e, ainda assim, seu nome e seu preço aparecerem dentro do pedido. Isso é normal em uma modelagem documental.
 
 
 ## Fontes
