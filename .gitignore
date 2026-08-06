@@ -31,3 +31,4 @@ Thumbs.db
 .cursor/
 AGENTS.md
 regras.md
+node_modules/
