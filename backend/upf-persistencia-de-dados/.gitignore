@@ -1,0 +1,33 @@
+# Saída gerada pelo MkDocs
+site/
+.cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Instruções e configurações locais de agentes
+.agents/
+.codex
+.cursor/
+AGENTS.md
+regras.md

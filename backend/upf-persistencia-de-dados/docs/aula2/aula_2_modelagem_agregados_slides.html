@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ADS167 - Aula 2 - Modelagem de Dados Agregados</title>
+    <style>
+      :root {
+        --ink: #13201a;
+        --muted: #627066;
+        --paper: #fbfaf4;
+        --paper-2: #f1efe4;
+        --line: #d5d0bf;
+        --green: #2f6b4f;
+        --green-2: #dceadf;
+        --clay: #b7633c;
+        --blue: #315f7d;
+        --sand: #eee2c6;
+        --shadow: rgba(36, 45, 38, 0.16);
+        --deck: min(1220px, calc(100vw - 34px));
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 16% 12%, rgba(47, 107, 79, 0.15), transparent 24rem),
+          radial-gradient(circle at 84% 84%, rgba(183, 99, 60, 0.12), transparent 28rem),
+          linear-gradient(135deg, #f7f5ec, #ece6d3);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background:
+          linear-gradient(rgba(19,32,26,.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(19,32,26,.045) 1px, transparent 1px);
+        background-size: 34px 34px;
+        mask-image: linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,.35));
+      }
+
+      h1, h2, h3, p { margin: 0; }
+      a { color: inherit; text-decoration: none; }
+
+      .topbar {
+        position: fixed;
+        inset: 16px 16px auto;
+        z-index: 50;
+      }
+
+      .topbar-inner {
+        width: var(--deck);
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .brand {
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        background: rgba(251,250,244,.9);
+        box-shadow: 0 10px 24px var(--shadow);
+      }
+
+      .brand strong {
+        display: block;
+        color: var(--green);
+        font-size: .78rem;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+      }
+
+      .brand span {
+        color: var(--muted);
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: .66rem;
+      }
+
+      .topnav {
+        max-width: 610px;
+        padding: 7px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 4px;
+        border: 1px solid var(--line);
+        background: rgba(251,250,244,.9);
+        box-shadow: 0 10px 24px var(--shadow);
+      }
+
+      .topnav a {
+        width: 25px;
+        height: 25px;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        border-radius: 50%;
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: .58rem;
+        font-weight: 850;
+      }
+
+      .topnav a:hover { color: white; background: var(--green); }
+
+      .slide {
+        min-height: 100vh;
+        padding: 84px 0 28px;
+        display: grid;
+        place-items: center;
+      }
+
+      .frame {
+        width: var(--deck);
+        min-height: min(760px, calc(100vh - 112px));
+        display: grid;
+        grid-template-columns: 78px 1fr;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background: rgba(251,250,244,.96);
+        box-shadow: 0 34px 80px var(--shadow);
+      }
+
+      .slide.exercise .frame {
+        border-color: #d69a28;
+        background: linear-gradient(135deg, rgba(255, 248, 214, .98), rgba(255, 236, 174, .98));
+        box-shadow: 0 34px 80px rgba(143, 91, 10, .24);
+      }
+
+      .slide.exercise .rail {
+        border-right-color: #d69a28;
+        background: linear-gradient(180deg, #d97706, #b45309);
+      }
+
+      .slide.exercise .rail::after,
+      .slide.exercise .slide-count { color: rgba(255, 255, 255, .72); }
+      .slide.exercise .mark { color: #92400e; background: #fff7d6; }
+      .slide.exercise .panelbar { background: rgba(255, 226, 138, .62); }
+      .slide.exercise .tag { color: #9a4d08; }
+
+      .rail {
+        position: relative;
+        padding: 24px 10px;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        justify-items: center;
+        border-right: 1px solid var(--line);
+        background:
+          linear-gradient(180deg, rgba(47,107,79,.08), rgba(183,99,60,.07)),
+          var(--paper-2);
+      }
+
+      .rail::after {
+        content: "DATA\A MODEL";
+        white-space: pre;
+        align-self: center;
+        color: rgba(19,32,26,.32);
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: .58rem;
+        line-height: 1.5;
+        letter-spacing: .16em;
+        font-weight: 900;
+        writing-mode: vertical-rl;
+      }
+
+      .mark {
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        color: white;
+        background: var(--green);
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-weight: 900;
+        box-shadow: 0 8px 20px rgba(47,107,79,.22);
+      }
+
+      .slide-count {
+        color: var(--muted);
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: .68rem;
+        writing-mode: vertical-rl;
+      }
+
+      .workspace {
+        min-width: 0;
+        display: grid;
+        grid-template-rows: 58px 1fr 58px;
+      }
+
+      .panelbar, .pager {
+        padding: 0 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .panelbar {
+        border-bottom: 1px solid var(--line);
+        background: rgba(241,239,228,.55);
+      }
+
+      .crumb, .tag, .pager span, .pager a {
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: .68rem;
+        font-weight: 850;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+      }
+
+      .crumb { color: var(--muted); }
+      .tag { color: var(--green); }
+
+      .content {
+        min-width: 0;
+        padding: 38px 46px;
+        display: grid;
+        align-content: center;
+        gap: 24px;
+      }
+
+      .content.top { align-content: start; }
+      .content.split { grid-template-columns: 1fr 1fr; align-items: center; }
+
+      .kicker {
+        width: fit-content;
+        padding: 7px 12px;
+        color: white;
+        background: var(--green);
+        border-radius: 999px;
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: .68rem;
+        font-weight: 900;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+      }
+
+      .title-xl {
+        max-width: 13ch;
+        font-size: clamp(4rem, 8vw, 7.3rem);
+        line-height: .9;
+        letter-spacing: -.07em;
+      }
+
+      .title-lg {
+        max-width: 17ch;
+        font-size: clamp(2.3rem, 4.5vw, 4.5rem);
+        line-height: .98;
+        letter-spacing: -.05em;
+      }
+
+      .lead {
+        max-width: 62ch;
+        color: var(--muted);
+        font-size: clamp(1rem, 1.45vw, 1.24rem);
+        line-height: 1.46;
+      }
+
+      .big {
+        max-width: 36ch;
+        font-size: clamp(1.45rem, 2.7vw, 2.55rem);
+        line-height: 1.18;
+        font-weight: 820;
+      }
+
+      .code {
+        margin: 0;
+        padding: 18px 20px;
+        overflow: auto;
+        color: #eff8f0;
+        border-radius: 18px;
+        border: 1px solid #153123;
+        border-left: 7px solid var(--clay);
+        background: #17231c;
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: clamp(.74rem, 1vw, .94rem);
+        line-height: 1.5;
+        tab-size: 2;
+      }
+
+      .code.small { font-size: clamp(.68rem, .88vw, .82rem); }
+
+      .grid-2, .grid-3 {
+        display: grid;
+        gap: 16px;
+      }
+      .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+      .card {
+        min-width: 0;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(241,239,228,.62));
+      }
+
+      .card h3 { margin-bottom: 8px; color: var(--green); font-size: 1.05rem; }
+      .card p { color: var(--muted); line-height: 1.42; }
+      .card.clay { border-top: 6px solid var(--clay); }
+      .card.green { border-top: 6px solid var(--green); }
+      .card.blue { border-top: 6px solid var(--blue); }
+
+      .diagram {
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: var(--paper-2);
+        color: var(--ink);
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: clamp(.9rem, 1.2vw, 1.08rem);
+        line-height: 1.55;
+        white-space: pre;
+        overflow: auto;
+      }
+
+      .callout {
+        padding: 20px 24px;
+        border-left: 7px solid var(--green);
+        border-radius: 18px;
+        background: var(--green-2);
+        font-size: clamp(1rem, 1.45vw, 1.22rem);
+        line-height: 1.44;
+      }
+
+      .question {
+        padding: 24px;
+        border: 2px solid var(--green);
+        border-radius: 24px;
+        background: #f8fbf7;
+        color: var(--green);
+        font-size: clamp(1.5rem, 2.8vw, 2.8rem);
+        line-height: 1.15;
+        font-weight: 900;
+        letter-spacing: -.03em;
+      }
+
+      .list {
+        margin: 0;
+        padding-left: 22px;
+        display: grid;
+        gap: 10px;
+        color: var(--muted);
+        font-size: clamp(1rem, 1.4vw, 1.22rem);
+        line-height: 1.38;
+      }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 18px;
+        background: white;
+        box-shadow: 0 8px 24px rgba(0,0,0,.05);
+      }
+      .table th, .table td {
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+      .table th { color: white; background: var(--green); }
+      .table td { color: var(--ink); }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .node {
+        position: relative;
+        min-height: 120px;
+        padding: 20px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: var(--paper-2);
+        font-weight: 850;
+      }
+      .node:not(:last-child)::after {
+        content: "→";
+        position: absolute;
+        right: -15px;
+        top: 50%;
+        color: var(--clay);
+        font-size: 1.6rem;
+        transform: translateY(-50%);
+        z-index: 4;
+      }
+
+      .pager {
+        border-top: 1px solid var(--line);
+        background: rgba(241,239,228,.45);
+      }
+      .pager span { color: var(--muted); }
+      .pager a {
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+      }
+      .pager a:hover { color: white; border-color: var(--green); background: var(--green); }
+
+      .highlight { color: var(--green); font-weight: 900; }
+      .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+
+      @media (max-width: 920px) {
+        .topnav { display: none; }
+        .frame { grid-template-columns: 1fr; }
+        .rail { display: none; }
+        .content { padding: 28px 24px; }
+        .content.split, .grid-2, .grid-3, .flow { grid-template-columns: 1fr; }
+        .node:not(:last-child)::after { display: none; }
+      }
+
+      @media (max-width: 560px) {
+        :root { --deck: calc(100vw - 16px); }
+        .brand span { display: none; }
+        .slide { padding-top: 72px; }
+        .workspace { grid-template-rows: 50px 1fr 54px; }
+        .panelbar, .pager { padding: 0 18px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand"><strong>ADS167</strong><span>Aula 2 · Modelagem de dados agregados</span></div>
+        <nav class="topnav" aria-label="Mapa dos slides">
+          <a href="#slide-01">01</a><a href="#slide-02">02</a><a href="#slide-03">03</a><a href="#slide-04">04</a>
+          <a href="#slide-05">05</a><a href="#slide-06">06</a><a href="#slide-07">07</a><a href="#slide-08">08</a>
+          <a href="#slide-09">09</a><a href="#slide-10">10</a><a href="#slide-11">11</a><a href="#slide-12">12</a>
+          <a href="#slide-13">13</a><a href="#slide-14">14</a><a href="#slide-15">15</a><a href="#slide-16">16</a>
+          <a href="#slide-17">17</a><a href="#slide-18">18</a><a href="#slide-19">19</a><a href="#slide-20">20</a>
+          <a href="#slide-21">21</a><a href="#slide-22">22</a><a href="#slide-23">23</a><a href="#slide-24">24</a>
+          <a href="#slide-25">25</a><a href="#slide-26">26</a><a href="#slide-27">27</a><a href="#slide-28">28</a>
+          <a href="#slide-29">29</a><a href="#slide-30">30</a><a href="#slide-31">31</a><a href="#slide-32">32</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="slide" id="slide-01"><article class="frame"><aside class="rail"><div class="mark">01</div><div class="slide-count">01 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">ads167 / persistência</span><span class="tag">aula 2</span></div><div class="content"><span class="kicker">Tecnologias de Persistência de Dados</span><h1 class="title-xl">Modelagem de dados agregados</h1><p class="lead">Do problema do mundo real para um documento JSON coerente.</p><div class="flow"><div class="node">Problema</div><div class="node">Dados</div><div class="node">Relações</div><div class="node">Documento</div></div></div><div class="pager"><span>01 / 32</span><a href="#slide-02">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-02"><article class="frame"><aside class="rail"><div class="mark">02</div><div class="slide-count">02 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">json / sintaxe versus modelo</span><span class="tag">conceito</span></div><div class="content split"><div><h2 class="title-lg">JSON válido não significa boa modelagem</h2><p class="lead">Um documento pode estar correto na sintaxe e ainda assim representar mal o problema.</p></div><div><pre class="code">{
+  "nome": "João",
+  "idade": 25
+}</pre><div class="callout">Formato válido e boa modelagem são problemas diferentes.</div></div></div><div class="pager"><a href="#slide-01">Anterior</a><span>02 / 32</span><a href="#slide-03">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-03"><article class="frame"><aside class="rail"><div class="mark">03</div><div class="slide-count">03 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">problema / pedido</span><span class="tag">partida</span></div><div class="content split"><div><h2 class="title-lg">Partindo de um problema real</h2><p class="lead">Uma loja precisa registrar pedidos.</p><div class="diagram">PEDIDO
+
+número
+data
+cliente
+status
+produtos</div></div><div><pre class="code">{
+  "numero": 1001,
+  "data": "2026-08-03",
+  "cliente": "Bruno",
+  "status": "ABERTO"
+}</pre><div class="question">E se precisarmos guardar mais informações do cliente?</div></div></div><div class="pager"><a href="#slide-02">Anterior</a><span>03 / 32</span><a href="#slide-04">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-04"><article class="frame"><aside class="rail"><div class="mark">04</div><div class="slide-count">04 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">cliente / objeto interno</span><span class="tag">agrupamento</span></div><div class="content"><h2 class="title-lg">Agrupando informações relacionadas</h2><div class="grid-2"><pre class="code">{
+  "numero": 1001,
+  "clienteNome": "Bruno",
+  "clienteTelefone": "54999999999",
+  "status": "ABERTO"
+}</pre><pre class="code">{
+  "numero": 1001,
+  "cliente": {
+    "nome": "Bruno",
+    "telefone": "54999999999"
+  },
+  "status": "ABERTO"
+}</pre></div><div class="callout">Nome e telefone pertencem ao mesmo conceito: <strong>cliente</strong>.</div></div><div class="pager"><a href="#slide-03">Anterior</a><span>04 / 32</span><a href="#slide-05">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-05"><article class="frame"><aside class="rail"><div class="mark">05</div><div class="slide-count">05 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">estrutura / significado</span><span class="tag">comparação</span></div><div class="content"><h2 class="title-lg">Estrutura também comunica significado</h2><div class="grid-2"><div><h3>Modelo A</h3><pre class="code">{
+  "nome": "Bruno",
+  "cidade": "Passo Fundo",
+  "estado": "RS"
+}</pre></div><div><h3>Modelo B</h3><pre class="code">{
+  "nome": "Bruno",
+  "endereco": {
+    "cidade": "Passo Fundo",
+    "estado": "RS"
+  }
+}</pre></div></div><p class="lead">Os dois modelos são válidos, mas o segundo deixa explícito que cidade e estado fazem parte do endereço.</p></div><div class="pager"><a href="#slide-04">Anterior</a><span>05 / 32</span><a href="#slide-06">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-06"><article class="frame"><aside class="rail"><div class="mark">06</div><div class="slide-count">06 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">composição / estrutura</span><span class="tag">visual</span></div><div class="content split"><div><h2 class="title-lg">Dados dentro de estruturas maiores</h2><p class="lead">Dados relacionados podem ser agrupados dentro de uma mesma estrutura.</p></div><div class="diagram">Cliente
+│
+├── nome
+│
+└── endereco
+    ├── cidade
+    └── estado</div></div><div class="pager"><a href="#slide-05">Anterior</a><span>06 / 32</span><a href="#slide-07">Próximo</a></div></div></article></section>
+
+      <section class="slide exercise" id="slide-07"><article class="frame"><aside class="rail"><div class="mark">07</div><div class="slide-count">07 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / objeto interno</span><span class="tag">prática</span></div><div class="content"><h2 class="title-lg">Como você modelaria?</h2><div class="grid-2"><div class="diagram">Pessoa
+
+nome
+email
+
+endereco:
+  cidade
+  estado
+  cep</div><div class="question">Represente essas informações utilizando JSON.</div></div></div><div class="pager"><a href="#slide-06">Anterior</a><span>07 / 32</span><a href="#slide-08">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-08"><article class="frame"><aside class="rail"><div class="mark">08</div><div class="slide-count">08 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / solução possível</span><span class="tag">resposta</span></div><div class="content split"><div><h2 class="title-lg">Uma possível modelagem</h2><p class="lead">O endereço aparece como estrutura interna porque seus campos pertencem ao mesmo conceito.</p></div><pre class="code">{
+  "nome": "Maria",
+  "email": "maria@email.com",
+  "endereco": {
+    "cidade": "Passo Fundo",
+    "estado": "RS",
+    "cep": "99000-000"
+  }
+}</pre></div><div class="pager"><a href="#slide-07">Anterior</a><span>08 / 32</span><a href="#slide-09">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-09"><article class="frame"><aside class="rail"><div class="mark">09</div><div class="slide-count">09 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">listas / campos numerados</span><span class="tag">arrays</span></div><div class="content"><h2 class="title-lg">Um pedido pode ter vários produtos</h2><div class="grid-2"><pre class="code">{
+  "numero": 1001,
+  "produto": "Mouse"
+}</pre><pre class="code">{
+  "numero": 1001,
+  "produto1": "Mouse",
+  "produto2": "Teclado"
+}</pre></div><div class="callout">Criar campos numerados não representa corretamente uma lista.</div></div><div class="pager"><a href="#slide-08">Anterior</a><span>09 / 32</span><a href="#slide-10">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-10"><article class="frame"><aside class="rail"><div class="mark">10</div><div class="slide-count">10 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">arrays / valores</span><span class="tag">lista</span></div><div class="content split"><div><h2 class="title-lg">Representando listas</h2><p class="lead">Arrays representam conjuntos de valores relacionados.</p></div><pre class="code">{
+  "numero": 1001,
+  "produtos": [
+    "Mouse",
+    "Teclado"
+  ]
+}</pre></div><div class="pager"><a href="#slide-09">Anterior</a><span>10 / 32</span><a href="#slide-11">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-11"><article class="frame"><aside class="rail"><div class="mark">11</div><div class="slide-count">11 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">arrays / objetos</span><span class="tag">itens</span></div><div class="content"><h2 class="title-lg">Quando cada item possui informações próprias</h2><div class="grid-2"><pre class="code">{
+  "numero": 1001,
+  "produtos": [
+    {
+      "nome": "Mouse",
+      "quantidade": 2,
+      "preco": 80.00
+    },
+    {
+      "nome": "Teclado",
+      "quantidade": 1,
+      "preco": 250.00
+    }
+  ]
+}</pre><div class="diagram">array
+   ↓
+objetos
+   ↓
+campos</div></div></div><div class="pager"><a href="#slide-10">Anterior</a><span>11 / 32</span><a href="#slide-12">Próximo</a></div></div></article></section>
+
+      <section class="slide exercise" id="slide-12"><article class="frame"><aside class="rail"><div class="mark">12</div><div class="slide-count">12 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / filme</span><span class="tag">prática</span></div><div class="content"><h2 class="title-lg">Modele um filme</h2><div class="grid-2"><div class="diagram">Filme
+
+titulo
+ano
+classificacao
+
+diretor:
+  nome
+  pais
+
+generos</div><div class="question">Represente o filme utilizando JSON.</div></div></div><div class="pager"><a href="#slide-11">Anterior</a><span>12 / 32</span><a href="#slide-13">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-13"><article class="frame"><aside class="rail"><div class="mark">13</div><div class="slide-count">13 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / solução</span><span class="tag">filme</span></div><div class="content"><h2 class="title-lg">Filme como documento</h2><div class="grid-2"><pre class="code">{
+  "titulo": "Interestelar",
+  "ano": 2014,
+  "classificacao": 12,
+
+  "diretor": {
+    "nome": "Christopher Nolan",
+    "pais": "Reino Unido"
+  },
+
+  "generos": [
+    "Ficção científica",
+    "Drama"
+  ]
+}</pre><div class="callout"><span class="mono">diretor</span> é um objeto.<br><span class="mono">generos</span> é um array.</div></div></div><div class="pager"><a href="#slide-12">Anterior</a><span>13 / 32</span><a href="#slide-14">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-14"><article class="frame"><aside class="rail"><div class="mark">14</div><div class="slide-count">14 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">arrays / tipos</span><span class="tag">comparação</span></div><div class="content"><h2 class="title-lg">Valores simples ou objetos</h2><div class="grid-2"><div><h3>Array de valores</h3><pre class="code">"generos": [
+  "Drama",
+  "Ação"
+]</pre></div><div><h3>Array de objetos</h3><pre class="code">"atores": [
+  {
+    "nome": "Ator A",
+    "personagem": "Personagem A"
+  }
+]</pre></div></div><p class="lead">A estrutura depende das informações necessárias em cada item.</p></div><div class="pager"><a href="#slide-13">Anterior</a><span>14 / 32</span><a href="#slide-15">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-15"><article class="frame"><aside class="rail"><div class="mark">15</div><div class="slide-count">15 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">pedido / estrutura</span><span class="tag">agregado</span></div><div class="content split"><div><h2 class="title-lg">Estrutura de um pedido</h2><p class="lead">Agora o pedido já não é apenas uma linha de campos. Ele possui partes internas.</p></div><div class="diagram">PEDIDO
+│
+├── numero
+├── data
+├── status
+├── cliente
+│   ├── nome
+│   └── telefone
+│
+└── itens
+    ├── produto
+    ├── quantidade
+    └── preco</div></div><div class="pager"><a href="#slide-14">Anterior</a><span>15 / 32</span><a href="#slide-16">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-16"><article class="frame"><aside class="rail"><div class="mark">16</div><div class="slide-count">16 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">definição / agregado</span><span class="tag">conceito</span></div><div class="content"><h2 class="title-lg">Agregado</h2><div class="callout"><strong>Agregado</strong> é um conjunto de dados relacionados que faz sentido tratar como uma unidade.</div><div class="grid-3"><div class="card green"><h3>Agregado principal</h3><p>PEDIDO</p></div><div class="card blue"><h3>Parte interna</h3><p>cliente</p></div><div class="card clay"><h3>Parte interna</h3><p>itens</p></div></div></div><div class="pager"><a href="#slide-15">Anterior</a><span>16 / 32</span><a href="#slide-17">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-17"><article class="frame"><aside class="rail"><div class="mark">17</div><div class="slide-count">17 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">pedido / documento completo</span><span class="tag">json</span></div><div class="content top"><h2 class="title-lg">O agregado completo</h2><pre class="code small">{
+  "numero": 1001,
+  "data": "2026-08-03",
+  "status": "ABERTO",
+
+  "cliente": {
+    "nome": "Ana",
+    "telefone": "54999999999"
+  },
+
+  "itens": [
+    {
+      "produto": "Mouse",
+      "quantidade": 2,
+      "preco": 80.00
+    },
+    {
+      "produto": "Teclado",
+      "quantidade": 1,
+      "preco": 250.00
+    }
+  ]
+}</pre><p class="lead">Informações relacionadas podem ser mantidas dentro de uma mesma estrutura.</p></div><div class="pager"><a href="#slide-16">Anterior</a><span>17 / 32</span><a href="#slide-18">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-18"><article class="frame"><aside class="rail"><div class="mark">18</div><div class="slide-count">18 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">relacional / documental</span><span class="tag">comparação</span></div><div class="content"><h2 class="title-lg">Duas formas de organizar os mesmos dados</h2><div class="grid-2"><div class="diagram">CLIENTE
+   │
+   └──── PEDIDO
+            │
+            └──── ITEM_PEDIDO
+                     │
+                     └──── PRODUTO</div><pre class="code">{
+  "numero": 1001,
+  "cliente": {
+    "nome": "Ana"
+  },
+  "itens": [
+    {
+      "produto": "Mouse",
+      "quantidade": 2,
+      "preco": 80
+    }
+  ]
+}</pre></div><div class="callout">Não existe um modelo universalmente melhor. Existe um modelo mais adequado para determinado uso.</div></div><div class="pager"><a href="#slide-17">Anterior</a><span>18 / 32</span><a href="#slide-19">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-19"><article class="frame"><aside class="rail"><div class="mark">19</div><div class="slide-count">19 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">padrão de acesso</span><span class="tag">pergunta chave</span></div><div class="content"><h2 class="title-lg">Como a aplicação usa os dados?</h2><div class="question">Quando eu buscar um pedido, o que preciso receber?</div><div class="flow"><div class="node">pedido</div><div class="node">cliente</div><div class="node">itens</div><div class="node">preços</div></div><div class="callout">Dados acessados juntos podem ser armazenados juntos.</div></div><div class="pager"><a href="#slide-18">Anterior</a><span>19 / 32</span><a href="#slide-20">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-20"><article class="frame"><aside class="rail"><div class="mark">20</div><div class="slide-count">20 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">embedded data</span><span class="tag">incorporado</span></div><div class="content"><h2 class="title-lg">Dados incorporados</h2><div class="grid-2"><pre class="code">{
+  "cliente": {
+    "nome": "Ana",
+    "telefone": "99999999"
+  }
+}</pre><pre class="code">{
+  "itens": [
+    {
+      "produto": "Mouse"
+    }
+  ]
+}</pre></div><div class="callout">Dado incorporado é um dado armazenado dentro de outro documento. Essa estratégia costuma fazer sentido quando os dados são utilizados juntos.</div></div><div class="pager"><a href="#slide-19">Anterior</a><span>20 / 32</span><a href="#slide-21">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-21"><article class="frame"><aside class="rail"><div class="mark">21</div><div class="slide-count">21 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">limite / documento inchado</span><span class="tag">cuidado</span></div><div class="content"><h2 class="title-lg">Incorporar não é colocar tudo dentro de tudo</h2><div class="grid-2"><pre class="code small">{
+  "pedido": 1001,
+  "cliente": {
+    "id": 10,
+    "nome": "Ana",
+    "cpf": "...",
+    "telefone": "...",
+    "enderecos": [],
+    "pedidosAnteriores": [],
+    "cartoes": [],
+    "preferencias": [],
+    "historico": []
+  }
+}</pre><div class="callout">Um documento pode começar a concentrar informações que não pertencem realmente ao agregado.</div></div></div><div class="pager"><a href="#slide-20">Anterior</a><span>21 / 32</span><a href="#slide-22">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-22"><article class="frame"><aside class="rail"><div class="mark">22</div><div class="slide-count">22 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">referência / documentos separados</span><span class="tag">ids</span></div><div class="content"><h2 class="title-lg">Mantendo documentos separados</h2><div class="grid-3"><pre class="code">{
+  "_id": 10,
+  "nome": "Ana",
+  "telefone": "99999999"
+}</pre><pre class="code">{
+  "numero": 1001,
+  "clienteId": 10,
+  "status": "ABERTO"
+}</pre><div class="diagram">PEDIDO
+   │
+   └── clienteId
+          │
+          ▼
+       CLIENTE</div></div><p class="lead">O pedido guarda um identificador que aponta para outro documento.</p></div><div class="pager"><a href="#slide-21">Anterior</a><span>22 / 32</span><a href="#slide-23">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-23"><article class="frame"><aside class="rail"><div class="mark">23</div><div class="slide-count">23 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">decisão / regra mental</span><span class="tag">tendências</span></div><div class="content top"><h2 class="title-lg">Como decidir?</h2><table class="table"><thead><tr><th>Situação</th><th>Tendência</th></tr></thead><tbody><tr><td>Dados normalmente usados juntos</td><td>Incorporar</td></tr><tr><td>O dado só faz sentido dentro do pai</td><td>Incorporar</td></tr><tr><td>Lista pequena e limitada</td><td>Incorporar</td></tr><tr><td>Dado possui vida própria</td><td>Referenciar</td></tr><tr><td>É consultado sozinho frequentemente</td><td>Referenciar</td></tr><tr><td>Pode crescer indefinidamente</td><td>Avaliar referência</td></tr><tr><td>É compartilhado por muitas entidades</td><td>Avaliar referência</td></tr></tbody></table><p class="lead">Isso não é uma receita matemática.</p></div><div class="pager"><a href="#slide-22">Anterior</a><span>23 / 32</span><a href="#slide-24">Próximo</a></div></div></article></section>
+
+      <section class="slide exercise" id="slide-24"><article class="frame"><aside class="rail"><div class="mark">24</div><div class="slide-count">24 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / decisão</span><span class="tag">prática</span></div><div class="content"><h2 class="title-lg">Incorporar ou referenciar?</h2><div class="grid-3"><div class="card green"><h3>Endereço de entrega</h3><p>Endereço utilizado na entrega de um pedido.</p></div><div class="card blue"><h3>Produto</h3><p>Cadastro completo do produto.</p></div><div class="card clay"><h3>Preço pago</h3><p>Valor pago pelo item no pedido.</p></div></div><div class="question">Escolha uma tendência e justifique.</div></div><div class="pager"><a href="#slide-23">Anterior</a><span>24 / 32</span><a href="#slide-25">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-25"><article class="frame"><aside class="rail"><div class="mark">25</div><div class="slide-count">25 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício / discussão</span><span class="tag">decisão</span></div><div class="content top"><h2 class="title-lg">Uma possível decisão</h2><table class="table"><thead><tr><th>Situação</th><th>Tendência</th><th>Motivo</th></tr></thead><tbody><tr><td>Endereço de entrega</td><td>Incorporar</td><td>Representa o endereço usado naquele pedido.</td></tr><tr><td>Cadastro completo do produto</td><td>Referenciar</td><td>Produto possui vida própria.</td></tr><tr><td>Preço pago</td><td>Incorporar</td><td>Representa o valor negociado naquele momento.</td></tr></tbody></table><div class="callout">Mais importante do que decorar a resposta é conseguir justificar a decisão.</div></div><div class="pager"><a href="#slide-24">Anterior</a><span>25 / 32</span><a href="#slide-26">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-26"><article class="frame"><aside class="rail"><div class="mark">26</div><div class="slide-count">26 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">histórico / preço pago</span><span class="tag">momento</span></div><div class="content"><h2 class="title-lg">O pedido representa um momento</h2><div class="grid-2"><div class="diagram">Preço atual do Mouse
+R$ 100
+
+Preço pago no pedido
+R$ 80</div><pre class="code">{
+  "produtoId": 10,
+  "nome": "Mouse",
+  "quantidade": 1,
+  "preco": 80.00
+}</pre></div><div class="callout">O preço atual do produto pode mudar. O preço pago naquele pedido não deveria mudar.</div></div><div class="pager"><a href="#slide-25">Anterior</a><span>26 / 32</span><a href="#slide-27">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-27"><article class="frame"><aside class="rail"><div class="mark">27</div><div class="slide-count">27 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">duplicação / desnormalização</span><span class="tag">trade-off</span></div><div class="content"><h2 class="title-lg">Duplicação pode ser intencional</h2><div class="grid-2"><pre class="code">{
+  "pedido": 1001,
+  "cliente": {
+    "id": 10,
+    "nome": "Ana"
+  }
+}</pre><pre class="code">{
+  "pedido": 1002,
+  "cliente": {
+    "id": 10,
+    "nome": "Ana"
+  }
+}</pre></div><div class="grid-2"><div class="card green"><h3>Normalização</h3><p>Menos repetição.</p></div><div class="card clay"><h3>Desnormalização</h3><p>Dados mais próximos de onde são utilizados.</p></div></div></div><div class="pager"><a href="#slide-26">Anterior</a><span>27 / 32</span><a href="#slide-28">Próximo</a></div></div></article></section>
+
+      <section class="slide exercise" id="slide-28"><article class="frame"><aside class="rail"><div class="mark">28</div><div class="slide-count">28 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">exercício final / biblioteca</span><span class="tag">prática</span></div><div class="content"><h2 class="title-lg">Biblioteca</h2><div class="grid-2"><div class="diagram">Empréstimo
+
+dataEmprestimo
+dataPrevista
+situacao
+
+aluno:
+  matricula
+  nome
+
+livros:
+  codigo
+  titulo</div><div><div class="question">Modele esse empréstimo como um documento JSON.</div><ul class="list"><li>Qual é o agregado principal?</li><li>Quais dados estão incorporados?</li><li>O que poderia ser referência?</li><li>Justifique a decisão.</li></ul></div></div></div><div class="pager"><a href="#slide-27">Anterior</a><span>28 / 32</span><a href="#slide-29">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-29"><article class="frame"><aside class="rail"><div class="mark">29</div><div class="slide-count">29 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">biblioteca / solução possível</span><span class="tag">json</span></div><div class="content top"><h2 class="title-lg">Empréstimo como agregado</h2><pre class="code small">{
+  "dataEmprestimo": "2026-08-03",
+  "dataPrevista": "2026-08-10",
+  "situacao": "EMPRESTADO",
+
+  "aluno": {
+    "matricula": "12345",
+    "nome": "João"
+  },
+
+  "livros": [
+    {
+      "codigo": 10,
+      "titulo": "Clean Code"
+    },
+    {
+      "codigo": 20,
+      "titulo": "Python Fluente"
+    }
+  ]
+}</pre><div class="callout">Essa é uma possível solução, não a única. O livro deveria estar inteiro dentro do empréstimo ou apenas ser referenciado?</div></div><div class="pager"><a href="#slide-28">Anterior</a><span>29 / 32</span><a href="#slide-30">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-30"><article class="frame"><aside class="rail"><div class="mark">30</div><div class="slide-count">30 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">fechamento / raciocínio</span><span class="tag">modelo mental</span></div><div class="content"><h2 class="title-lg">O raciocínio da modelagem</h2><div class="flow"><div class="node">O que a aplicação precisa?</div><div class="node">Quais informações existem?</div><div class="node">Quais pertencem juntas?</div><div class="node">Como serão consultadas?</div></div><div class="question">Incorporar ou referenciar?</div><div class="callout">Banco documental não significa jogar qualquer JSON no banco. A estrutura precisa refletir os dados e a forma como a aplicação utiliza essas informações.</div></div><div class="pager"><a href="#slide-29">Anterior</a><span>30 / 32</span><a href="#slide-31">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-31"><article class="frame"><aside class="rail"><div class="mark">31</div><div class="slide-count">31 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">próxima aula / mongodb</span><span class="tag">ponte</span></div><div class="content split"><div><h2 class="title-lg">Na próxima aula</h2><p class="big">Os documentos já estão modelados. Agora vamos armazená-los.</p></div><div class="card green"><h3>MongoDB</h3><ul class="list"><li>bancos;</li><li>collections;</li><li>documentos;</li><li>operações CRUD.</li></ul></div></div><div class="pager"><a href="#slide-30">Anterior</a><span>31 / 32</span><a href="#slide-32">Próximo</a></div></div></article></section>
+
+      <section class="slide" id="slide-32"><article class="frame"><aside class="rail"><div class="mark">32</div><div class="slide-count">32 / 32</div></aside><div class="workspace"><div class="panelbar"><span class="crumb">referências / mongodb</span><span class="tag">fontes</span></div><div class="content top"><h2 class="title-lg">Referências</h2><ul class="list"><li>MongoDB — Data Modeling<br>https://www.mongodb.com/pt-br/docs/manual/data-modeling/</li><li>MongoDB — Embedded Data<br>https://www.mongodb.com/docs/manual/data-modeling/embedding/</li><li>MongoDB — References<br>https://www.mongodb.com/docs/manual/data-modeling/referencing/</li><li>MongoDB — Schema Design Process<br>https://www.mongodb.com/docs/v8.0/data-modeling/schema-design-process/</li></ul></div><div class="pager"><a href="#slide-31">Anterior</a><span>32 / 32</span><a href="#slide-01">Início</a></div></div></article></section>
+    </main>
+  </body>
+</html>
